@@ -65,8 +65,11 @@
     <Reference Include="System.Configuration" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ContentTesting\Pipelines\ContentTestDataSourceResolverBase.cs" />
     <Compile Include="ContentTesting\Pipelines\EvaluateTestExposureBase.cs" />
+    <Compile Include="ContentTesting\Pipelines\RenderLayout\ContentTestDataSourceResolver.cs" />
     <Compile Include="ContentTesting\Pipelines\RenderLayout\EvaluateTestExposure.cs" />
+    <Compile Include="ContentTesting\Pipelines\RenderLayout\PageLevelTestItemResolver.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
