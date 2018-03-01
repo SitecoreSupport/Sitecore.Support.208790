@@ -15,6 +15,10 @@
 
     public abstract class ContentTestDataSourceResolverBase<TArgs>
     {
+        #region Added code
+        private const string IS_ERROR_KEY = "SitecoreSupport.IsError";
+        #endregion
+
         protected readonly IContentTestingFactory factory;
         protected readonly IContentTestStore testStore;
 
@@ -55,6 +59,13 @@
         protected abstract ID GetVariableType();
         public virtual void Process(TArgs args)
         {
+            #region Added code
+            if ((bool)Context.Items[IS_ERROR_KEY])
+            {
+                return;
+            }
+            #endregion
+
             Assert.ArgumentNotNull(args, "args");
             if (Settings.IsAutomaticContentTestingEnabled)
             {

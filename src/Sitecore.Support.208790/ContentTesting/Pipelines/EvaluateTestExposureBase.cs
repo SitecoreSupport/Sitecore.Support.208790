@@ -16,13 +16,18 @@
     using Sitecore.Data;
     using Sitecore.Data.Items;
     using Sitecore.Diagnostics;
+    using System;
     using System.Web;
 
     public abstract class EvaluateTestExposureBase<TPipelineArgs>
     {
+        #region Added code
+        private const string IS_ERROR_KEY = "SitecoreSupport.IsError";
+        #endregion
+
         protected readonly IContentTestStore contentTestStore;
         protected readonly IContentTestingFactory factory;
-
+        
         protected EvaluateTestExposureBase() : this(null, null)
         {
         }
@@ -43,6 +48,10 @@
         protected abstract Item GetRequestItem(TPipelineArgs args);
         public void Process(TPipelineArgs args)
         {
+            #region Added code
+            Context.Items.Add(IS_ERROR_KEY, false);
+            #endregion
+
             Assert.ArgumentNotNull(args, "args");
             if (Settings.IsAutomaticContentTestingEnabled && ((Context.Site == null) || (Context.Site.Name != "shell")))
             {
@@ -64,6 +73,13 @@
                             }
                             else
                             {
+                                #region Added code
+                                if ((bool)Context.Items[IS_ERROR_KEY])
+                                {
+                                    return;
+                                }
+                                #endregion
+
                                 this.factory.TestingTracker.SetTestCombination(combination, testConfiguration.TestDefinitionItem, false);
                             }
                         }
@@ -88,6 +104,16 @@
                                             testCombinationContext.SaveToResponse(testset.Id, null);
                                             return;
                                         }
+                                        else
+                                        {
+                                            #region Added code
+                                            if ((bool)Context.Items[IS_ERROR_KEY])
+                                            {
+                                                return;
+                                            }
+                                            #endregion
+                                        }
+
                                         this.factory.TestingTracker.SetTestCombination(combination2, testConfiguration.TestDefinitionItem, false);
                                         return;
                                     }
@@ -110,6 +136,13 @@
                                     }
                                     else
                                     {
+                                        #region Added code
+                                        if ((bool)Context.Items[IS_ERROR_KEY])
+                                        {
+                                            return;
+                                        }
+                                        #endregion
+
                                         this.factory.TestingTracker.SetTestCombination(args2.Combination, testConfiguration.TestDefinitionItem, true);
                                         testCombinationContext.SaveToResponse(args2.Combination.Testset.Id, args2.Combination.Combination);
                                     }
@@ -140,14 +173,24 @@
             TestValueInspector inspector = new TestValueInspector();
             for (int i = 0; i < combination.Combination.Length; i++)
             {
-                TestValue testValue = combination.GetValue(i);
-
-                if (!inspector.IsValidDataSource(testConfiguration.TestDefinitionItem, testValue))
+                #region Modified code
+                try
                 {
-                    SuspendTestArgs args = new SuspendTestArgs(testConfiguration);
-                    SettingsDependantPipeline<SuspendTestPipeline, SuspendTestArgs>.Instance.Run(args);
-                    return false;
+                    TestValue testValue = combination.GetValue(i);
+
+                    if (!inspector.IsValidDataSource(testConfiguration.TestDefinitionItem, testValue))
+                    {
+                        SuspendTestArgs args = new SuspendTestArgs(testConfiguration);
+                        SettingsDependantPipeline<SuspendTestPipeline, SuspendTestArgs>.Instance.Run(args);
+                        return false;
+                    }
                 }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.Message, this);
+                    Context.Items[IS_ERROR_KEY] = true;
+                }
+                #endregion
             }
             return true;
         }
