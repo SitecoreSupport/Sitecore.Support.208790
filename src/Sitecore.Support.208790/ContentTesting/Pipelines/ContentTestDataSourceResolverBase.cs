@@ -72,18 +72,29 @@
                 Item requestItem = this.GetRequestItem(args);
                 if ((requestItem != null) && this.ShouldRun(requestItem))
                 {
-                    if (Context.PageMode.IsPageEditor)
+                    try
                     {
-                        requestItem = this.ProcessPageEditorRequest(requestItem);
+                        if (Context.PageMode.IsPageEditor)
+                        {
+                            requestItem = this.ProcessPageEditorRequest(requestItem);
+                        }
+                        else
+                        {
+                            requestItem = this.ProcessStandardRequest(requestItem);
+                        }
+                        if (requestItem != null)
+                        {
+                            this.SetRequestItem(args, requestItem);
+                        }
                     }
-                    else
+                    #region Added code
+                    catch (Exception ex)
                     {
-                        requestItem = this.ProcessStandardRequest(requestItem);
+                        Log.Error(ex.Message, this);
+                        Context.Items[IS_ERROR_KEY] = true;
+                        return;
                     }
-                    if (requestItem != null)
-                    {
-                        this.SetRequestItem(args, requestItem);
-                    }
+                    #endregion
                 }
             }
         }
